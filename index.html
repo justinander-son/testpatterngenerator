@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Disguise Test Pattern Generator</title>
+  <meta name="description" content="Offline-first pixel-perfect test pattern generator for LED walls, projection surfaces, and Disguise direct mapping.">
+  <link rel="stylesheet" href="src/css/style.css">
+  <script src="src/vendor/jszip.min.js"></script>
+</head>
+<body>
+
+  <!-- ========================================================================
+       TOP WORKSTATION HEADER
+       ======================================================================== -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-group">
+        <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <path d="M3 9h18M9 21V9"/>
+          <circle cx="15" cy="15" r="3"/>
+        </svg>
+        <div class="app-title">
+          Disguise TPG
+          <span class="badge-tag">DIRECT MAP</span>
+        </div>
+      </div>
+      <input type="text" id="project-title-input" class="project-title-input" placeholder="Project Name" title="Click to rename project">
+    </div>
+
+    <div class="header-center">
+      <div class="screen-indicator-badge">
+        <div class="screen-dot"></div>
+        <span id="header-screen-name">Upstage Main LED</span>
+        <span id="header-screen-res" style="color: var(--text-muted); font-family: var(--font-mono);">(3840×2160)</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button id="btn-fit-screen" class="btn btn-secondary" title="Fit canvas to viewport">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        Fit
+      </button>
+      <button id="btn-open-csv" class="btn btn-secondary" title="Import screens via CSV / Excel">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Import CSV
+      </button>
+
+      <!-- Integrated Export Split Dropdown Button (Blue) -->
+      <div class="split-btn-group" id="export-dropdown-group">
+        <button id="btn-export-zip-top" class="btn btn-primary btn-split-main" title="Batch export all screens to ZIP">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          Export All
+        </button>
+        <button id="btn-export-caret" class="btn btn-primary btn-split-caret" title="Export options">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="dropdown-menu" id="export-dropdown-menu">
+          <button class="dropdown-item" id="btn-export-single" type="button">
+            <svg class="dropdown-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            <div>
+              <div class="dropdown-title">Export Single</div>
+              <div class="dropdown-desc">Lossless PNG for active screen</div>
+            </div>
+          </button>
+          <button class="dropdown-item" id="btn-export-all-opt" type="button">
+            <svg class="dropdown-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            <div>
+              <div class="dropdown-title">Export All</div>
+              <div class="dropdown-desc">ZIP bundle of all screens</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <button id="btn-fullscreen" class="btn btn-secondary btn-icon-only" title="Toggle Fullscreen">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       MAIN WORKSPACE: SIDEBAR + VIEWPORT + BOTTOM DRAWER
+       ======================================================================== -->
+  <div class="app-workspace">
+
+    <!-- LEFT CONTROL SIDEBAR -->
+    <aside class="app-sidebar">
+      <div class="sidebar-scroll">
+
+        <!-- 1. Screen Sizing & Basic Presets -->
+        <div class="control-section open">
+          <div class="section-header">
+            <div class="section-title-group">
+              <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              Screen Dimensions
+            </div>
+            <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="section-content">
+            <div class="input-with-label">
+              <span>Screen Name</span>
+              <input type="text" id="screen-name-input" class="input-text" value="Upstage Main LED">
+            </div>
+
+            <div class="input-with-label">
+              <span>Resolution Preset</span>
+              <select id="screen-preset-select" class="select-input"></select>
+            </div>
+
+            <div class="inputs-split">
+              <div class="input-with-label">
+                <span>Width (px)</span>
+                <input type="number" id="screen-width-input" class="input-num" min="16" max="32768" step="1">
+              </div>
+              <div class="input-with-label">
+                <span>Height (px)</span>
+                <input type="number" id="screen-height-input" class="input-num" min="16" max="32768" step="1">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div>
+                <div class="form-label">Aspect Ratio</div>
+                <div id="aspect-ratio-display" class="form-label-desc">16:9 (1.78)</div>
+              </div>
+              <div id="pixel-count-display" style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">
+                8,294,400 px
+              </div>
+            </div>
+
+            <div class="input-with-label">
+              <span>Feed / Processor Notes</span>
+              <input type="text" id="screen-notes-input" class="input-text" placeholder="e.g. Brompton SX40 Ports 1-4">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Physical LED Cabinet & Module Grid -->
+        <div class="control-section open">
+          <div class="section-header">
+            <div class="section-title-group">
+              <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              LED Hardware Grid
+            </div>
+            <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="section-content">
+            <div class="input-with-label">
+              <span>Cabinet Tile Preset</span>
+              <select id="tile-preset-select" class="select-input"></select>
+            </div>
+
+            <div class="inputs-split">
+              <div class="input-with-label">
+                <span>Cabinet W (px)</span>
+                <input type="number" id="cabinet-width-input" class="input-num" min="8" max="2048" step="1">
+              </div>
+              <div class="input-with-label">
+                <span>Cabinet H (px)</span>
+                <input type="number" id="cabinet-height-input" class="input-num" min="8" max="2048" step="1">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <span class="form-label">Cabinet Seam Lines</span>
+              <label class="switch">
+                <input type="checkbox" id="toggle-cabinet-grid" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="form-row">
+              <span class="form-label">Cabinet Grid Color</span>
+              <div class="color-picker-row">
+                <input type="color" id="color-cabinet-grid" class="color-swatch-input" value="#ffffff">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <span class="form-label">Show Cabinet Coordinates</span>
+              <label class="switch">
+                <input type="checkbox" id="toggle-cabinet-labels" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="form-row">
+              <span class="form-label">Module Subdivisions</span>
+              <select id="module-divisions-select" class="select-input" style="width: 100px;">
+                <option value="1">1×1 (Off)</option>
+                <option value="2" selected>2×2 (Half)</option>
+                <option value="4">4×4 (Quarter)</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <span class="form-label">Module Grid Style</span>
+              <select id="module-style-select" class="select-input" style="width: 100px;">
+                <option value="dashed" selected>Dashed</option>
+                <option value="dotted">Dotted</option>
+                <option value="solid">Solid</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <span class="form-label">Fine Measurement Grid (50px)</span>
+              <label class="switch">
+                <input type="checkbox" id="toggle-fine-grid">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Outer Border & Crop Ticks (Overscan Detection) -->
+        <div class="control-section open">
+          <div class="section-header">
+            <div class="section-title-group">
+              <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>
+              1px Border & Crop Ticks
+            </div>
+            <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="section-content">
+            <div class="form-row">
+              <div>
+                <div class="form-label">1px Outer Perimeter Line</div>
+                <div class="form-label-desc">Critical for spotting Disguise overscan/crop</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-border" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="form-row">
+              <span class="form-label">Border Color</span>
+              <div class="color-picker-row">
+                <input type="color" id="color-border" class="color-swatch-input" value="#00ffff">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div>
+                <div class="form-label">Corner & Edge Crop Ticks</div>
+                <div class="form-label-desc">L-brackets at extreme outer corners</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-crop-ticks" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Geometric Alignment (Circles & Crosshairs) -->
+        <div class="control-section">
+          <div class="section-header">
+            <div class="section-title-group">
+              <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              Geometric Alignment
+            </div>
+            <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="section-content">
+            <div class="form-row">
+              <div>
+                <div class="form-label">Concentric Circles</div>
+                <div class="form-label-desc">Detects non-square pixel stretch</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-circles" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="form-row">
+              <span class="form-label">Circle Spacing (px)</span>
+              <input type="number" id="circle-spacing-input" class="input-num" style="width: 80px;" value="200" min="40" max="1000" step="20">
+            </div>
+
+            <div class="form-row">
+              <span class="form-label">Circle Color</span>
+              <input type="color" id="color-circles" class="color-swatch-input" value="#ff2d55">
+            </div>
+
+            <div class="form-row">
+              <div>
+                <div class="form-label">Corner-to-Corner Diagonals</div>
+                <div class="form-label-desc">Corner alignment 'X' lines</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-diagonals" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="form-row">
+              <div>
+                <div class="form-label">Center Target Crosshair</div>
+                <div class="form-label-desc">Center reticle & coordinate callout</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-crosshair" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="form-row">
+              <div>
+                <div class="form-label">Alternating Checkerboard</div>
+                <div class="form-label-desc">Contrast & module texel checking</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-checkerboard">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Disguise Metadata Plaque -->
+        <div class="control-section">
+          <div class="section-header">
+            <div class="section-title-group">
+              <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              Metadata Plaque
+            </div>
+            <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="section-content">
+            <div class="form-row">
+              <span class="form-label">Show Metadata Plaque</span>
+              <label class="switch">
+                <input type="checkbox" id="toggle-metadata" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="form-row">
+              <span class="form-label">Position</span>
+              <select id="metadata-position-select" class="select-input" style="width: 130px;">
+                <option value="center" selected>Center</option>
+                <option value="bottom-center">Bottom Center</option>
+                <option value="top-center">Top Center</option>
+                <option value="top-left">Top Left</option>
+                <option value="top-right">Top Right</option>
+                <option value="bottom-left">Bottom Left</option>
+                <option value="bottom-right">Bottom Right</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <span class="form-label">Scale</span>
+              <select id="metadata-scale-select" class="select-input" style="width: 120px;">
+                <option value="0.75">Small (75%)</option>
+                <option value="1.0" selected>Normal (100%)</option>
+                <option value="1.5">Large (150%)</option>
+                <option value="2.0">XL (200%)</option>
+              </select>
+            </div>
+
+            <div class="input-with-label">
+              <span>Author / Lead Tech</span>
+              <input type="text" id="metadata-author-input" class="input-text" value="Lead Video Tech">
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Canvas Background & Contrast -->
+        <div class="control-section">
+          <div class="section-header">
+            <div class="section-title-group">
+              <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+              Background & Theme
+            </div>
+            <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="section-content">
+            <!-- 3-way segmented theme tabs -->
+            <div class="theme-segmented-group" id="theme-mode-tabs">
+              <button type="button" class="theme-seg-btn active" data-mode="obsidian">Obsidian</button>
+              <button type="button" class="theme-seg-btn" data-mode="multicolor">Multi Colour</button>
+              <button type="button" class="theme-seg-btn" data-mode="custom">Custom</button>
+            </div>
+
+            <!-- View 1: Obsidian -->
+            <div id="theme-view-obsidian" class="theme-view">
+              <div class="theme-status-card">
+                <span class="theme-status-dot" style="background: #111317; border: 1px solid #3a4150;"></span>
+                <div class="theme-status-text">
+                  <div class="theme-status-label">Pro AV Obsidian Dark</div>
+                  <div class="theme-status-sub">High-contrast stage & screen dark mode</div>
+                </div>
+              </div>
+              <div class="inputs-split">
+                <button type="button" class="btn btn-secondary" id="btn-theme-obsidian">Obsidian #111317</button>
+                <button type="button" class="btn btn-secondary" id="btn-theme-black">True Black #000000</button>
+              </div>
+            </div>
+
+            <!-- View 2: Multi Colour (Pastel Pairs) -->
+            <div id="theme-view-multicolor" class="theme-view" style="display: none;">
+              <div class="palette-preview-card">
+                <div class="palette-preview-badge" id="multi-palette-preview">
+                  <div class="palette-swatch-sq" id="multi-swatch-sq"></div>
+                  <div class="palette-swatch-circ" id="multi-swatch-circ"></div>
+                </div>
+                <div class="palette-preview-info">
+                  <div class="palette-preview-title" id="multi-palette-screen-name">Screen 1</div>
+                  <div class="palette-preview-subtitle" id="multi-palette-index-tag">Palette #01 / 54 (Auto)</div>
+                </div>
+              </div>
+
+              <div class="palette-nav-row">
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-palette-prev" title="Previous Pastel Pair">‹ Prev</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-palette-auto" title="Reset to auto-assigned pair for this screen">Auto</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-palette-next" title="Next Pastel Pair">Next ›</button>
+              </div>
+
+              <button type="button" class="palette-browse-toggle" id="btn-browse-palettes">
+                <span>Browse All 54 Palettes</span>
+                <svg class="chevron-mini" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="palette-grid-dropdown collapsed" id="palette-grid-container">
+                <!-- 54 mini swatches dynamically generated in JS -->
+              </div>
+            </div>
+
+            <!-- View 3: Custom (Panel A & B) -->
+            <div id="theme-view-custom" class="theme-view" style="display: none;">
+              <div class="form-row">
+                <span class="form-label">Panel A Color</span>
+                <div class="color-picker-row">
+                  <input type="color" id="color-custom-a" class="color-swatch-input" value="#111317">
+                  <span class="color-hex-label" id="color-custom-a-hex">#111317</span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <span class="form-label">Panel B Color</span>
+                <div class="color-picker-row">
+                  <input type="color" id="color-custom-b" class="color-swatch-input" value="#1a1d24">
+                  <span class="color-hex-label" id="color-custom-b-hex">#1a1d24</span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label class="checkbox-label" for="toggle-custom-alternate">
+                  <input type="checkbox" id="toggle-custom-alternate" class="layer-checkbox" checked>
+                  <span>Alternate Panels (Checkerboard)</span>
+                </label>
+              </div>
+
+              <button type="button" class="btn btn-secondary" id="btn-custom-obsidian-preset" style="width: 100%; margin-top: 4px;">
+                Reset Both to Obsidian
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- CENTER STAGE VIEWPORT -->
+    <main class="viewport-container" id="viewport">
+      <div class="canvas-wrapper" id="canvas-wrapper">
+        <canvas id="pattern-canvas" width="3840" height="2160"></canvas>
+      </div>
+
+      <!-- Floating Pixel Peeper HUD -->
+      <div class="pixel-peeper-hud" id="pixel-peeper-hud">
+        <div class="hud-item">
+          <div class="screen-dot" style="width: 6px; height: 6px;"></div>
+          <span id="hud-coords">X: 0000, Y: 0000</span>
+        </div>
+        <div class="hud-divider"></div>
+        <div class="hud-item">
+          <span id="hud-tile">Cab: [1, 1] • Mod: [1, 1]</span>
+        </div>
+        <div class="hud-divider"></div>
+        <div class="hud-zoom-controls">
+          <button class="hud-btn" id="hud-zoom-fit">FIT</button>
+          <button class="hud-btn" id="hud-zoom-100">100%</button>
+          <button class="hud-btn" id="hud-zoom-400">400%</button>
+          <span id="hud-zoom" style="color: var(--accent-cyan); font-weight: 700; margin-left: 4px;">100%</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- BOTTOM MULTI-SCREEN QUEUE DRAWER -->
+    <section class="screen-drawer" id="screen-drawer">
+      <div class="drawer-header" id="drawer-toggle">
+        <div class="drawer-title-group">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Show Screen Queue (<span id="drawer-screen-count">3</span>)
+        </div>
+        <div class="drawer-actions">
+          <svg class="drawer-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="drawer-cards-track" id="screen-cards-track">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ========================================================================
+       MODAL: CSV SCREEN IMPORTER
+       ======================================================================== -->
+  <div class="modal-overlay" id="csv-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">Import Screens via CSV / Excel</div>
+        <button class="modal-close-btn" id="csv-modal-close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="drop-zone" id="csv-drop-zone">
+          <svg class="drop-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          <div class="drop-zone-title">Drag & drop .CSV file here, or click to browse</div>
+          <div class="drop-zone-subtitle">Supports CSV or TSV (copied from Excel / Google Sheets)</div>
+          <input type="file" id="csv-file-input" accept=".csv,.tsv,.txt" style="display: none;">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="form-label">Or paste raw table data below:</span>
+          <button id="btn-download-sample-csv" class="btn btn-secondary" style="font-size: 10px; padding: 2px 8px;">Download Sample CSV</button>
+        </div>
+
+        <textarea id="csv-text-input" class="csv-textarea" placeholder="Screen Name, Width, Height, Cabinet W, Cabinet H, Notes&#10;Upstage Main, 3840, 2160, 192, 192, Brompton SX40&#10;Stage Left, 1920, 1080, 192, 192, Port 1-2"></textarea>
+
+        <div class="form-row">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+            <input type="checkbox" id="csv-replace-checkbox">
+            Replace existing screens (unchecked adds to list)
+          </label>
+          <span id="csv-preview-count" style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-cyan);">Ready to parse</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="csv-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" id="csv-import-submit">Import Screens</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: BATCH ZIP EXPORT PROGRESS
+       ======================================================================== -->
+  <div class="modal-overlay" id="batch-export-modal">
+    <div class="modal-card" style="width: 440px;">
+      <div class="modal-header">
+        <div class="modal-title">Generating Batch Test Patterns</div>
+      </div>
+      <div class="modal-body">
+        <div class="progress-container">
+          <div class="progress-track">
+            <div class="progress-fill" id="batch-progress-fill"></div>
+          </div>
+          <div class="progress-status" id="batch-progress-status">Initializing render worker...</div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: flex-end;">
+        <button class="btn btn-secondary" id="batch-cancel-btn" disabled>Working...</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Bootstrap -->
+  <script type="module" src="src/js/app.js"></script>
+</body>
+</html>
