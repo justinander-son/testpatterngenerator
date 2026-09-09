@@ -69,11 +69,11 @@ export function renderMetadataLayer(ctx, width, height, screen, state) {
   posX = Math.max(10, Math.min(width - baseW - 10, posX));
   posY = Math.max(10, Math.min(height - baseH - 10, posY));
 
-  // 1. Drop shadow & background card
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.70)';
-  ctx.shadowBlur = 24 * scale;
+  // 1. Drop shadow & background card (soft ambient falloff, no hard edge)
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+  ctx.shadowBlur = 18 * scale;
   ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 6 * scale;
+  ctx.shadowOffsetY = 4 * scale;
 
   ctx.fillStyle = '#111317'; // Precision studio slate
   ctx.beginPath();
@@ -81,9 +81,11 @@ export function renderMetadataLayer(ctx, width, height, screen, state) {
   ctx.roundRect(posX, posY, baseW, baseH, radius);
   ctx.fill();
 
-  // 2. High-contrast precision graphite/silver border
+  // 2. Crisp single precision graphite border
   ctx.shadowColor = 'transparent';
   ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
   ctx.strokeStyle = '#3b4252'; // Sleek architectural graphite
   ctx.lineWidth = 1.5 * scale;
   ctx.stroke();
