@@ -41,7 +41,7 @@ export function renderGridLayer(ctx, width, height, screen, state) {
 
     ctx.save();
     ctx.strokeStyle = isPastel ? '#ffffff' : (state.moduleGridColor || '#5a6275');
-    ctx.globalAlpha = isPastel ? 0.35 : Math.max(0.1, Math.min(1, state.moduleGridOpacity || 0.5));
+    ctx.globalAlpha = isPastel ? 0.60 : Math.max(0.1, Math.min(1, state.moduleGridOpacity || 0.5));
     ctx.lineWidth = 1;
 
     if (state.moduleGridStyle === 'dashed') {
@@ -80,6 +80,11 @@ export function renderGridLayer(ctx, width, height, screen, state) {
     ctx.lineWidth = Math.max(1, state.cabinetGridWidth || 1);
     ctx.setLineDash([]);
 
+    if (isPastel) {
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.40)';
+      ctx.shadowBlur = 2.5;
+    }
+
     ctx.beginPath();
     const cols = Math.ceil(width / cabW);
     const rows = Math.ceil(height / cabH);
@@ -96,27 +101,47 @@ export function renderGridLayer(ctx, width, height, screen, state) {
     }
     ctx.stroke();
 
-    // 4. Cabinet Labels: subtle coordinate callouts [Col, Row]
+    // 4. Cabinet Labels: accessible coordinate callouts [Col, Row]
     if (state.showCabinetLabels && cabW >= 64 && cabH >= 48) {
-      if (isPastel) {
-        ctx.fillStyle = '#ffffff';
-        ctx.globalAlpha = 0.95;
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-        ctx.shadowBlur = 3;
-      } else {
-        ctx.fillStyle = state.cabinetGridColor || '#ffffff';
-        ctx.globalAlpha = 0.5;
-      }
       ctx.font = '600 11px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
 
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const posX = c * cabW + 6;
-          const posY = r * cabH + 6;
-          if (posX < width - 20 && posY < height - 20) {
-            ctx.fillText(`${c + 1},${r + 1}`, posX, posY);
+      if (isPastel) {
+        ctx.lineJoin = 'round';
+        ctx.miterLimit = 2;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.50)';
+        ctx.shadowBlur = 3;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 1;
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const posX = c * cabW + 6;
+            const posY = r * cabH + 6;
+            if (posX < width - 20 && posY < height - 20) {
+              const text = `${c + 1},${r + 1}`;
+              // 1. Dark contrast halo for accessible legibility (WCAG AAA)
+              ctx.strokeStyle = 'rgba(15, 23, 42, 0.85)';
+              ctx.lineWidth = 2.5;
+              ctx.strokeText(text, posX, posY);
+
+              // 2. Crisp pure white text fill
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText(text, posX, posY);
+            }
+          }
+        }
+      } else {
+        ctx.fillStyle = state.cabinetGridColor || '#ffffff';
+        ctx.globalAlpha = 0.5;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const posX = c * cabW + 6;
+            const posY = r * cabH + 6;
+            if (posX < width - 20 && posY < height - 20) {
+              ctx.fillText(`${c + 1},${r + 1}`, posX, posY);
+            }
           }
         }
       }

@@ -464,10 +464,10 @@ class App {
       if (swatchCirc) swatchCirc.style.backgroundColor = pair[1];
       if (screenNameEl) screenNameEl.textContent = screen ? screen.name : 'Active Screen';
       if (tagEl) {
-        tagEl.textContent = `Palette #${(Math.abs(palIdx) % PASTEL_PALETTES.length) + 1} of 54 ${isManual ? '(Custom Override)' : '(Auto)'}`;
+        tagEl.textContent = `Palette #${(Math.abs(palIdx) % PASTEL_PALETTES.length) + 1} of ${PASTEL_PALETTES.length} ${isManual ? '(Custom Override)' : '(Auto)'}`;
       }
 
-      // Mark active swatch in 54-grid
+      // Mark active swatch in grid
       const activeIdx = Math.abs(palIdx) % PASTEL_PALETTES.length;
       document.querySelectorAll('#palette-grid-container .palette-grid-item').forEach(item => {
         item.classList.toggle('active', parseInt(item.dataset.index, 10) === activeIdx);

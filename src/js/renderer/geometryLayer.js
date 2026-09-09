@@ -50,6 +50,11 @@ export function renderGeometryLayer(ctx, width, height, state) {
     ctx.lineWidth = 1.5;
     ctx.globalAlpha = isPastel ? 0.95 : 0.85;
 
+    if (isPastel) {
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.40)';
+      ctx.shadowBlur = 2.5;
+    }
+
     const maxRadius = Math.sqrt(midX * midX + midY * midY);
     const step = Math.max(40, state.circleSpacing || 200);
 
@@ -60,11 +65,22 @@ export function renderGeometryLayer(ctx, width, height, state) {
 
       // Radius label along horizontal axis
       if (r < midX - 40) {
-        ctx.fillStyle = cCol;
-        ctx.font = '500 10px system-ui, -apple-system, sans-serif';
+        const text = `r=${r}`;
+        ctx.font = '600 10px system-ui, -apple-system, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
-        ctx.fillText(`r=${r}`, midX + r, midY - 3);
+        if (isPastel) {
+          ctx.lineJoin = 'round';
+          ctx.miterLimit = 2;
+          ctx.strokeStyle = 'rgba(15, 23, 42, 0.85)';
+          ctx.lineWidth = 2.5;
+          ctx.strokeText(text, midX + r, midY - 3);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(text, midX + r, midY - 3);
+        } else {
+          ctx.fillStyle = cCol;
+          ctx.fillText(text, midX + r, midY - 3);
+        }
       }
     }
     ctx.restore();
@@ -77,6 +93,11 @@ export function renderGeometryLayer(ctx, width, height, state) {
     ctx.strokeStyle = crossCol;
     ctx.fillStyle = crossCol;
     ctx.lineWidth = 1.5;
+
+    if (isPastel) {
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.40)';
+      ctx.shadowBlur = 2.5;
+    }
 
     const reticleRadius = Math.max(20, Math.min(state.centerTargetRadius || 120, Math.min(width, height) / 3));
 
@@ -109,7 +130,18 @@ export function renderGeometryLayer(ctx, width, height, state) {
     ctx.font = '600 11px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    ctx.fillText(`CENTER (${midX}, ${midY})`, midX + 8, midY + 8);
+    const centerText = `CENTER (${midX}, ${midY})`;
+    if (isPastel) {
+      ctx.lineJoin = 'round';
+      ctx.miterLimit = 2;
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.lineWidth = 2.5;
+      ctx.strokeText(centerText, midX + 8, midY + 8);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(centerText, midX + 8, midY + 8);
+    } else {
+      ctx.fillText(centerText, midX + 8, midY + 8);
+    }
 
     ctx.restore();
   }
