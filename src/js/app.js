@@ -5,7 +5,7 @@
 
 import { store, PASTEL_PALETTES, getScreenColors } from './state.js';
 import { STANDARD_RESOLUTIONS, STANDARD_TILE_SIZES } from './presets.js';
-import { renderPattern } from './renderer/canvasEngine.js';
+import { renderPattern } from './renderer/canvasEngine.js?v=2.2';
 import { exportScreenToPng } from './renderer/exportEngine.js';
 import { exportAllScreensToZip } from './renderer/batchExporter.js';
 import { ViewportController } from './viewport/panZoom.js';

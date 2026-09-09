@@ -20,5 +20,5 @@ echo "========================================================"
 # Open browser after a brief delay
 (sleep 1 && open "http://localhost:$PORT") &
 
-# Start python static server
-python3 -m http.server $PORT
+# Start python server with automatic no-cache headers
+python3 server.py $PORT

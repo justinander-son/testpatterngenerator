@@ -6,7 +6,7 @@
 import { renderBorderLayer } from './borderLayer.js';
 import { renderGridLayer } from './gridLayer.js';
 import { renderGeometryLayer } from './geometryLayer.js';
-import { renderMetadataLayer } from './metadataLayer.js';
+import { renderMetadataLayer } from './metadataLayer.js?v=2.2';
 import { getScreenColors } from '../presets.js';
 
 export function renderPattern(canvas, screen, state, screenIndex = 0) {
