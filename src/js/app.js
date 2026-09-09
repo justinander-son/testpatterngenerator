@@ -268,12 +268,13 @@ class App {
     const btnBrowse = document.getElementById('btn-browse-palettes');
     const gridContainer = document.getElementById('palette-grid-container');
     if (btnBrowse && gridContainer) {
-      btnBrowse.addEventListener('click', () => {
+      btnBrowse.addEventListener('click', (e) => {
+        e.preventDefault();
         const isCollapsed = gridContainer.classList.toggle('collapsed');
         btnBrowse.classList.toggle('expanded', !isCollapsed);
       });
 
-      // Populate 54 swatches in the grid
+      // Populate 20 swatches in the grid
       gridContainer.innerHTML = '';
       PASTEL_PALETTES.forEach((pair, idx) => {
         const item = document.createElement('div');
@@ -282,7 +283,9 @@ class App {
         item.title = `Palette #${idx + 1} (${pair[0]} / ${pair[1]})`;
         item.style.backgroundColor = pair[0];
         item.innerHTML = `<div class="palette-grid-item-circ" style="background-color: ${pair[1]};"></div>`;
-        item.addEventListener('click', () => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
           store.setActiveScreenPaletteIndex(idx);
         });
         gridContainer.appendChild(item);
